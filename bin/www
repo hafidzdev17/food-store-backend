@@ -10,6 +10,10 @@ var debug = require('debug')('foodstore-backend:server');
 var http = require('http');
 
 const db = require('../database');
+db.once('open', () => {
+  console.log('Database connected...');
+})
+
 
 /**
  * Get port from environment and store in Express.
