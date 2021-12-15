@@ -12,7 +12,7 @@ const {
 
 // (3) connect ke MongoDB menggunakan konfigurasi yang telah kita import 
 mongoose
-    .connect(`mongodb://${dbUser}:${dbPass}@${dbHost}:${dbPort}/${dbName}`, {
+    .connect(`mongodb://${dbUser}:${dbPass}@${dbHost}:${dbPort}/${dbName}?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false`, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         useFindAndModify: false,
