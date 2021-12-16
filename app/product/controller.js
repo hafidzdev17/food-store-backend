@@ -109,8 +109,98 @@ async function store(req, res, next) {
     }
 }
 
+async function update(req, res, next) {
+
+    try {
+
+        let payload = req.body;
+
+        if (req.file) {
+            let tmp_path = req.file.path;
+            let originalExt = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1];
+            let filename = req.file.filename + '.' + originalExt;
+            let target_path = path.resolve(config.rootPath, `public/uploads/product/${filename}`);
+
+            const src = fs.createReadStream(tmp_path);
+            const dest = fs.createWriteStream(target_path);
+            src.pipe(dest);
+
+            src.on('end', async () => {
+                try {
+
+                    let product = await Product.findOne({
+                        _id: req.params.id
+                    });
+
+                    let currentImage = `${config.rootPath}/public/uploads/product/${product.image_url}`;
+
+                    if (fs.existsSync(currentImage)) {
+                        fs.unlinkSync(currentImage)
+                    }
+
+                    product =
+                        await Product
+                        .findOneAndUpdate({
+                            _id: req.params.id
+                        }, {
+                            ...payload,
+                            image_url: filename
+                        }, {
+                            new: true,
+                            runValidators: true
+                        });
+
+                    return res.json(product);
+                } catch (err) {
+                    // ----- cek tipe error ---- //
+                    if (err && err.name === 'ValidationError') {
+                        return res.json({
+                            error: 1,
+                            message: err.message,
+                            fields: err.errors
+                        });
+                    }
+
+                    next(err);
+                }
+            });
+
+            src.on('error', async () => {
+                next(err);
+            });
+
+        } else {
+
+            // (6) update produk jika tidak ada file upload
+            let product =
+                await Product
+                .findOneAndUpdate({
+                    _id: req.params.id
+                }, payload, {
+                    new: true,
+                    runValidators: true
+                });
+
+            return res.json(product);
+
+        }
+    } catch (err) {
+
+        // ----- cek tipe error ---- //
+        if (err && err.name === 'ValidationError') {
+            return res.json({
+                error: 1,
+                message: err.message,
+                fields: err.errors
+            });
+        }
+
+        next(err);
+    }
+}
 
 module.exports = {
     index,
-    store
+    store,
+    update
 }
