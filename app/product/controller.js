@@ -4,7 +4,26 @@ const path = require('path');
 const Product = require('./model');
 const config = require('../config');
 
+async function index(req, res, next) {
+    try {
 
+        let {
+            limit = 10, skip = 0
+        } = req.query;
+
+        // convert query string to int
+        const limitInt = parseInt(limit);
+        const skipInt = parseInt(skip);
+
+        let products = await Product
+            .find()
+            .limit(limitInt)
+            .skip(skipInt);
+        return res.json(products);
+    } catch (err) {
+        next(err)
+    }
+}
 
 async function store(req, res, next) {
 
@@ -23,6 +42,7 @@ async function store(req, res, next) {
             // membangun nama file baru lengkap dengan ekstensi asli
             let filename = req.file.filename + '.' + originalExt;
 
+            // mengkonfigurasi tempat penyimpanan untuk file yang diupload
             let target_path = path.resolve(config.rootPath, `public/uploads/product/${filename}`);
 
             // (1) baca file yang masih di lokasi sementara 
@@ -89,7 +109,8 @@ async function store(req, res, next) {
     }
 }
 
+
 module.exports = {
-    // index,
+    index,
     store
 }
